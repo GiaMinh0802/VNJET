@@ -342,6 +342,17 @@ GO
 ---------------------------------------------------------------------------------------------------
 
 -- STORE PROCEDURE
+-- Stored Procedure tìm kiếm thông tin nhân viên bằng tên
+CREATE PROC USP_SearchStaffByName
+@name NVARCHAR(50)
+AS
+	SELECT Accounts.idStaffs, nameStaffs, addressStaffs, phoneStaffs, userAcc, typeAcc 
+	FROM dbo.Accounts INNER JOIN dbo.Staffs ON Staffs.idStaffs = Accounts.idStaffs
+	WHERE nameStaffs LIKE '%'+@name+'%'
+	ORDER BY Accounts.idStaffs
+GO
+EXEC dbo.USP_SearchStaffByName @name = N'Võ' -- nvarchar(50)
+
 -- Stored Procedure lấy thông tin chuyến bay theo mã chuyến bay
 CREATE PROC USP_GetFlightByIdFlight
 @idFlight CHAR(10)
@@ -459,4 +470,64 @@ AS
 	ON AirportToGo.idAirport = FlightRoutes.idAirportToGo
 	INNER JOIN dbo.Airports AS AirportToCome
 	ON AirportToCome.idAirport = FlightRoutes.idAirportToCome
+GO
+
+---------------------------------------------------------------------------------------------------
+
+-- TRANSACTION
+-- Transaction thêm nhân viên
+CREATE PROC USP_InsertStaff
+@name NVARCHAR(50), @address NVARCHAR(50), @phone VARCHAR(20), 
+@user CHAR(100), @type INT
+AS
+	DECLARE @id CHAR(10) = (SELECT dbo.UF_CreateIdStaff())
+	DECLARE @len INT = (SELECT LEN(@phone))
+	BEGIN TRAN
+	IF (@len <> 10)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	INSERT dbo.Staffs(idStaffs, nameStaffs, addressStaffs, phoneStaffs) VALUES (@id, @name, @address, @phone)
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	INSERT dbo.Accounts(userAcc, passAcc, idStaffs, typeAcc) VALUES (@user, '1', @id, @type)
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	COMMIT TRAN
+GO
+
+-- Transaction sửa thông tin nhân viên
+CREATE PROC USP_UpdateStaff
+@id CHAR(10), @name NVARCHAR(50), @address NVARCHAR(50), @phone VARCHAR(20), 
+@user CHAR(100), @type INT
+AS
+	DECLARE @len INT = (SELECT LEN(@phone))
+	BEGIN TRAN
+	IF (@len <> 10)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	UPDATE dbo.Staffs SET nameStaffs = @name, addressStaffs = @address, phoneStaffs = @phone
+	WHERE idStaffs = @id
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	UPDATE dbo.Accounts SET userAcc = @user,  typeAcc = @type 
+	WHERE idStaffs = @id
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	COMMIT TRAN
 GO

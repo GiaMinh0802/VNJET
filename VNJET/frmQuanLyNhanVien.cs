@@ -83,7 +83,8 @@ namespace VNJET
 
         private void btnThem_Click(object sender, EventArgs e)
         {
-            if (txtName.Text.Trim() != "" && txtUsername.Text.Trim() != "")
+            if (txtName.Text.Trim() != "" && txtAddress.Text.Trim() != "" && 
+                txtPhone.Text.Trim() != "" && txtUsername.Text.Trim() != "" )
             {
                 int type = 0;
                 if (rdbtnNVQuanTri.Checked)
@@ -116,7 +117,42 @@ namespace VNJET
 
         private void btnSua_Click(object sender, EventArgs e)
         {
-
+            if (txtMaNhanVien.Text.Trim() != "")
+            {
+                if (txtName.Text.Trim() != "" && txtAddress.Text.Trim() != "" &&
+                    txtPhone.Text.Trim() != "" && txtUsername.Text.Trim() != "")
+                {
+                    int type = 0;
+                    if (rdbtnNVQuanTri.Checked)
+                        type = 1;
+                    if (rdbtnNVBanVe.Checked)
+                        type = 0;
+                    try
+                    {
+                        StaffDTO dto = new StaffDTO(txtMaNhanVien.Text, txtName.Text, txtAddress.Text, txtPhone.Text, txtUsername.Text, type);
+                        if (staffbus.UpdateStaff(dto))
+                            MessageBox.Show("Sửa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        else
+                            MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        Recreate();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void btnXoa_Click(object sender, EventArgs e)
@@ -148,7 +184,8 @@ namespace VNJET
 
         private void btnTimKiem_Click(object sender, EventArgs e)
         {
-
+            dtgvNhanVien.DataSource = staffbus.SearchByName(txtTimKiem.Text);
+            txtTimKiem.Text = "";
         }
     }
 }

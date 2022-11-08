@@ -55,7 +55,7 @@ namespace DAO
         {
             try
             {
-                string query = String.Format("DELETE dbo.Accounts WHERE idStaffs='{0}'");
+                string query = String.Format("EXEC dbo.USP_InsertStaff N'{0}', N'{1}', '{2}', '{3}', {4} ", dto.NameStaff, dto.AddressStaff, dto.PhoneStaff, dto.UserAcc, dto.Type);
                 int result = DataProvider.Instance.ExecuteNonQuery(query);
                 return result > 0;
             }
@@ -63,6 +63,27 @@ namespace DAO
             {
                 return false;
             }
+        }
+
+        public bool UpdateStaff(StaffDTO dto)
+        {
+            try
+            {
+                string query = String.Format("EXEC dbo.USP_UpdateStaff '{0}', N'{1}', N'{2}', '{3}', '{4}', {5} ", dto.IdStaff, dto.NameStaff, dto.AddressStaff, dto.PhoneStaff, dto.UserAcc, dto.Type);
+                int result = DataProvider.Instance.ExecuteNonQuery(query);
+                return result > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public DataTable SearchByName(string name)
+        {
+            string query = String.Format("EXEC dbo.USP_SearchStaffByName @name = N'{0}'", name);
+            DataTable dt = DataProvider.Instance.ExecuteQuery(query);
+            return dt;
         }
     }
 }
