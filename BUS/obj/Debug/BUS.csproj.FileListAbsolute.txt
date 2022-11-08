@@ -1,0 +1,14 @@
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\obj\Debug\BUS.csproj.AssemblyReference.cache
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\obj\Debug\BUS.csproj.CoreCompileInputs.cache
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\BUS.dll.config
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\BUS.dll
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\BUS.pdb
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\DAO.dll
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\DAO.pdb
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\DAO.dll.config
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\obj\Debug\BUS.csproj.CopyComplete
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\obj\Debug\BUS.dll
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\obj\Debug\BUS.pdb
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\DTO.dll
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\DTO.pdb
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\BUS\bin\Debug\DTO.dll.config
