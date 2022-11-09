@@ -338,6 +338,34 @@ BEGIN
 	RETURN @IdFR
 END
 GO
+-- Function tạo mã hạng vé
+CREATE FUNCTION UF_CreateIdTicketClass()
+RETURNS CHAR(10)
+AS
+BEGIN
+	DECLARE @IdTC CHAR(10)
+	DECLARE @count INT = (SELECT COUNT(*) FROM dbo.TicketClasses)
+	IF @count = 0
+		RETURN 'HV0000'
+	SET @count = (SELECT CAST((SELECT SUBSTRING((SELECT TOP(1) idTicketClass FROM dbo.TicketClasses ORDER BY idTicketClass DESC), 3, 5)) AS INT) + 1)
+	SET @IdTC = 'HV' + CAST(@count AS CHAR(10))
+	DECLARE @temp INT = @count
+	DECLARE @strSoKhong CHAR(4) = ''
+	DECLARE @dem INT = 0 
+	WHILE @temp > 0
+	BEGIN
+	    SET @temp = @temp / 10
+		SET @dem = @dem + 1
+	END
+	DECLARE @i INT = 0
+	WHILE @i < (4 - @dem)
+	BEGIN
+		SET @IdTC = (SELECT STUFF(@IdTC, 3, 0, '0'))
+		SET @i = @i + 1
+	END
+	RETURN @IdTC
+END
+GO
 -- Function lấy giá vé của chuyến bay
 CREATE FUNCTION UF_GetPriceByIdFlightAndIdTicketClass(@idFlight CHAR(10), @idTicketClass CHAR(10))
 RETURNS DECIMAL(18, 0)
@@ -477,6 +505,18 @@ BEGIN
 		ROLLBACK TRAN	
 END
 GO
+-- Trigger kiểm tra trùng lặp tên hạng vé
+CREATE TRIGGER UTG_CheckNameTịcketClass
+ON dbo.TicketClasses AFTER INSERT, UPDATE
+AS
+BEGIN
+	DECLARE @nameTC NVARCHAR(50), @count INT
+	SELECT @nameTC = Inserted.nameTicketClass FROM Inserted
+	SELECT @count = COUNT(*) FROM dbo.TicketClasses WHERE nameTicketClass = @nameTC
+	IF (@count > 1)
+		ROLLBACK TRAN	
+END
+GO
 
 ---------------------------------------------------------------------------------------------------
 
@@ -571,8 +611,8 @@ AS
 	COMMIT TRAN
 GO
 
-SELECT * FROM dbo.UV_FlightRouteForDisplay WHERE nameAirportToGo LIKE '%'+N'Tân'+'%' OR nameAirportToCome LIKE '%'+N'Tân'+'%' ORDER BY idFlightRoutes
-
-INSERT dbo.FlightRoutes(idFlightRoutes, idAirportToGo, idAirportToCome) VALUES ((SELECT dbo.UF_CreateIdFlightRoute()), '', '')
-UPDATE dbo.FlightRoutes SET idAirportToGo = '', idAirportToCome = '' WHERE idFlightRoutes = ''
-DELETE dbo.FlightRoutes WHERE idFlightRoutes = ''
+SELECT dbo.UF_CreateIdTicketClass()
+SELECT * FROM dbo.TicketClasses WHERE nameTicketClass LIKE '%'+N'{0}'+'%'
+DELETE dbo.TicketClasses WHERE idTicketClass = ''
+UPDATE dbo.TicketClasses SET nameTicketClass = N'' WHERE idTicketClass = ''
+INSERT dbo.TicketClasses(idTicketClass, nameTicketClass) VALUES ((SELECT dbo.UF_CreateIdTicketClass()), N'{0}')
