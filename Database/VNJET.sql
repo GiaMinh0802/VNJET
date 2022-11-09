@@ -310,6 +310,34 @@ BEGIN
 	RETURN @IdAirport
 END
 GO
+-- Function tạo mã tuyến bay
+CREATE FUNCTION UF_CreateIdFlightRoute()
+RETURNS CHAR(10)
+AS
+BEGIN
+	DECLARE @IdFR CHAR(10)
+	DECLARE @count INT = (SELECT COUNT(*) FROM dbo.FlightRoutes)
+	IF @count = 0
+		RETURN 'TB0000'
+	SET @count = (SELECT CAST((SELECT SUBSTRING((SELECT TOP(1) idFlightRoutes FROM dbo.FlightRoutes ORDER BY idFlightRoutes DESC), 3, 5)) AS INT) + 1)
+	SET @IdFR = 'TB' + CAST(@count AS CHAR(10))
+	DECLARE @temp INT = @count
+	DECLARE @strSoKhong CHAR(4) = ''
+	DECLARE @dem INT = 0 
+	WHILE @temp > 0
+	BEGIN
+	    SET @temp = @temp / 10
+		SET @dem = @dem + 1
+	END
+	DECLARE @i INT = 0
+	WHILE @i < (4 - @dem)
+	BEGIN
+		SET @IdFR = (SELECT STUFF(@IdFR, 3, 0, '0'))
+		SET @i = @i + 1
+	END
+	RETURN @IdFR
+END
+GO
 -- Function lấy giá vé của chuyến bay
 CREATE FUNCTION UF_GetPriceByIdFlightAndIdTicketClass(@idFlight CHAR(10), @idTicketClass CHAR(10))
 RETURNS DECIMAL(18, 0)
@@ -449,10 +477,7 @@ BEGIN
 		ROLLBACK TRAN	
 END
 GO
-SELECT * FROM dbo.Airports
-INSERT dbo.Airports(idAirport, nameAirport, cityAirport) VALUES ((SELECT dbo.UF_CreateIdAirport()), N'Cam Ranh', N'Khánh Hòa')
-UPDATE dbo.Airports SET nameAirport = N'Nội Bài', cityAirport = N'Hà Nội' WHERE idAirport = 'SB0006'
-SELECT * FROM dbo.Airports WHERE nameAirport LIKE '%'+N''+'%' ORDER BY idAirport
+
 ---------------------------------------------------------------------------------------------------
 
 -- VIEW
@@ -545,3 +570,9 @@ AS
 	END
 	COMMIT TRAN
 GO
+
+SELECT * FROM dbo.UV_FlightRouteForDisplay WHERE nameAirportToGo LIKE '%'+N'Tân'+'%' OR nameAirportToCome LIKE '%'+N'Tân'+'%' ORDER BY idFlightRoutes
+
+INSERT dbo.FlightRoutes(idFlightRoutes, idAirportToGo, idAirportToCome) VALUES ((SELECT dbo.UF_CreateIdFlightRoute()), '', '')
+UPDATE dbo.FlightRoutes SET idAirportToGo = '', idAirportToCome = '' WHERE idFlightRoutes = ''
+DELETE dbo.FlightRoutes WHERE idFlightRoutes = ''
