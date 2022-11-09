@@ -449,7 +449,10 @@ BEGIN
 		ROLLBACK TRAN	
 END
 GO
-
+SELECT * FROM dbo.Airports
+INSERT dbo.Airports(idAirport, nameAirport, cityAirport) VALUES ((SELECT dbo.UF_CreateIdAirport()), N'Cam Ranh', N'Khánh Hòa')
+UPDATE dbo.Airports SET nameAirport = N'Nội Bài', cityAirport = N'Hà Nội' WHERE idAirport = 'SB0006'
+SELECT * FROM dbo.Airports WHERE nameAirport LIKE '%'+N''+'%' ORDER BY idAirport
 ---------------------------------------------------------------------------------------------------
 
 -- VIEW
@@ -542,10 +545,3 @@ AS
 	END
 	COMMIT TRAN
 GO
-
-DELETE dbo.Planes WHERE idPlane='MB0005'
-
-SELECT * FROM dbo.Planes
-UPDATE dbo.Planes SET namePlane = N'Boeing 721', seatsPlane = 150 WHERE idPlane = 'MB0004'
-
-SELECT * FROM dbo.Planes WHERE namePlane LIKE '%'+namePlane+'%'
