@@ -1,4 +1,5 @@
 ﻿using DAO;
+using DTO;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -22,6 +23,26 @@ namespace BUS
         public object GetFlightByAirportAndTime(string idAirportToGo, string idAirportToCome, DateTime thoiGianKHTu, DateTime thoiGianKHDen)
         {
             return FlightDAO.Instance.GetFlightByAirportAndTime(idAirportToGo, idAirportToCome, thoiGianKHTu, thoiGianKHDen);
+        }
+
+        public bool InsertFlight(FlightDTO dto)
+        {
+            return FlightDAO.Instance.InsertFlight(dto);
+        }
+
+        public bool UpdateFlight(FlightDTO dto)
+        {
+            return FlightDAO.Instance.UpdateFlight(dto);
+        }
+
+        public bool DeleteFlight(string id)
+        {
+            return FlightDAO.Instance.DeleteFlight(id);
+        }
+
+        public DataTable SearchById(string id)
+        {
+            return FlightDAO.Instance.SearchById(id);
         }
     }
 }

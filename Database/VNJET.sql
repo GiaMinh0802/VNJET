@@ -366,6 +366,34 @@ BEGIN
 	RETURN @IdTC
 END
 GO
+-- Function tạo mã chuyến bay
+CREATE FUNCTION UF_CreateIdFlight()
+RETURNS CHAR(10)
+AS
+BEGIN
+	DECLARE @IdFlight CHAR(10)
+	DECLARE @count INT = (SELECT COUNT(*) FROM dbo.Flights)
+	IF @count = 0
+		RETURN 'CB0000'
+	SET @count = (SELECT CAST((SELECT SUBSTRING((SELECT TOP(1) idFlights FROM dbo.Flights ORDER BY idFlights DESC), 3, 5)) AS INT) + 1)
+	SET @IdFlight = 'CB' + CAST(@count AS CHAR(10))
+	DECLARE @temp INT = @count
+	DECLARE @strSoKhong CHAR(4) = ''
+	DECLARE @dem INT = 0 
+	WHILE @temp > 0
+	BEGIN
+	    SET @temp = @temp / 10
+		SET @dem = @dem + 1
+	END
+	DECLARE @i INT = 0
+	WHILE @i < (4 - @dem)
+	BEGIN
+		SET @IdFlight = (SELECT STUFF(@IdFlight, 3, 0, '0'))
+		SET @i = @i + 1
+	END
+	RETURN @IdFlight
+END
+GO
 -- Function lấy giá vé của chuyến bay
 CREATE FUNCTION UF_GetPriceByIdFlightAndIdTicketClass(@idFlight CHAR(10), @idTicketClass CHAR(10))
 RETURNS DECIMAL(18, 0)
@@ -395,6 +423,18 @@ BEGIN
 	RETURN 0
 END
 GO
+-- Function lấy số ghế còn lại của máy bay từ mã chuyến bay 
+CREATE FUNCTION UF_GetSeatsOfPlaneByIdFlight(@idFlight CHAR(10))
+RETURNS INT
+AS	
+BEGIN
+	DECLARE @totalseats INT = (SELECT seatsPlane FROM dbo.Planes 
+								WHERE idPlane = (SELECT idPlane FROM dbo.Flights WHERE idFlights = @idFlight))
+	DECLARE @insertseats INT = (SELECT SUM(totalSeats) FROM dbo.TicketStatus WHERE idFlights = @idFlight)
+	RETURN @totalseats - @insertseats
+END
+GO
+
 ---------------------------------------------------------------------------------------------------
 
 -- STORE PROCEDURE
@@ -407,7 +447,7 @@ AS
 	WHERE nameStaffs LIKE '%'+@name+'%'
 	ORDER BY Accounts.idStaffs
 GO
--- Stored Procedure lấy thông tin chuyến bay theo mã chuyến bay
+-- Stored Procedure lấy danh sách chuyến bay theo mã chuyến bay
 CREATE PROC USP_GetFlightByIdFlight
 @idFlight CHAR(10)
 AS
@@ -421,6 +461,18 @@ AS
 	INNER JOIN dbo.Airports AS AirportToCome
 	ON AirportToCome.idAirport = FlightRoutes.idAirportToCome
 	WHERE idFlights = @idFlight
+GO
+-- Stored Procedure lấy danh sách chuyến bay theo sân bay và thời gian
+CREATE PROC USP_GetFlightByAirportAndTime
+@idAirportToGo CHAR(10), @idAirportToCome CHAR(10),
+@timeToGo DATETIME, @timeToCome DATETIME
+AS
+	SELECT idFlights, timeToGo, timeToCome
+	FROM dbo.Flights 
+	INNER JOIN dbo.FlightRoutes
+	ON FlightRoutes.idFlightRoutes = Flights.idFlightRoutes
+	WHERE idAirportToGo = @idAirportToGo AND idAirportToCome = @idAirportToCome AND
+	(timeToGo >= @timeToGo AND timeToGo <= @timeToCome)
 GO
 -- Stored Procedure tìm kiếm thông tin vé của khách hàng từ số điện thoại
 CREATE PROC USP_SearchTicketFlightByPhone
@@ -444,18 +496,6 @@ AS
 	FROM dbo.TicketStatus INNER JOIN dbo.TicketClasses
 	ON TicketClasses.idTicketClass = TicketStatus.idTicketClass
 	WHERE idFlights = @idFlight
-GO
--- Stored Procedure lấy danh sách chuyến bay theo thời gian
-CREATE PROC USP_GetFlightByAirportAndTime
-@idAirportToGo CHAR(10), @idAirportToCome CHAR(10),
-@timeToGo DATETIME, @timeToCome DATETIME
-AS
-	SELECT idFlights, timeToGo, timeToCome
-	FROM dbo.Flights 
-	INNER JOIN dbo.FlightRoutes
-	ON FlightRoutes.idFlightRoutes = Flights.idFlightRoutes
-	WHERE idAirportToGo = @idAirportToGo AND idAirportToCome = @idAirportToCome AND
-	(timeToGo >= @timeToGo AND timeToGo <= @timeToCome)
 GO
 -- Stored Procedure lấy danh sách tình trạng vé từ mã máy bay
 CREATE PROC USP_GetTicketStatusByIdFlight
@@ -515,6 +555,59 @@ BEGIN
 	SELECT @count = COUNT(*) FROM dbo.TicketClasses WHERE nameTicketClass = @nameTC
 	IF (@count > 1)
 		ROLLBACK TRAN	
+END
+GO
+-- Trigger thêm danh sách doanh thu khi thêm, sửa chuyến bay
+CREATE TRIGGER UTG_AddSaleFromFlight
+ON dbo.Flights AFTER INSERT, UPDATE
+AS
+BEGIN
+	DECLARE @timetogonew DATETIME, @timetocomenew DATETIME, @monthnew INT, @yearnew INT, @timetogoold DATETIME, @timetocomeold DATETIME, @monthold INT, @yearold INT, @idFlightnew CHAR(10), @idFlightold CHAR(10)
+	SELECT @timetogonew = Inserted.timeToGo, @timetocomenew = Inserted.timeToCome, @idFlightnew = Inserted.idFlights FROM Inserted
+	SELECT @timetogoold = Deleted.timeToGo, @timetocomeold = Deleted.timeToCome, @idFlightold = Deleted.idFlights FROM Deleted
+	SET @monthnew = (SELECT MONTH(@timetogonew))
+	SET @yearnew = (SELECT YEAR(@timetogonew))
+	SET @monthold = (SELECT MONTH(@timetogoold))
+	SET @yearold = (SELECT YEAR(@timetogoold))
+	BEGIN TRAN
+	IF (@timetogonew < (SELECT GETDATE()))
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	IF (@timetogonew >= @timetocomenew)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END	
+	INSERT dbo.Sales(monthSales, yearSales, idFlights, countTicket, sale) VALUES (@monthnew, @yearnew, @idFlightnew, 0, 0)
+	DELETE dbo.Sales WHERE monthSales = @monthold AND yearSales = @yearold AND idFlights = @idFlightold
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	COMMIT TRAN
+END
+GO
+-- Trigger thêm danh sách doanh thu khi thêm, sửa chuyến bay
+ALTER TRIGGER UTG_DeleteSaleFromFlight
+ON dbo.Flights INSTEAD OF DELETE
+AS
+BEGIN
+	DECLARE @timetogoold DATETIME, @timetocomeold DATETIME, @monthold INT, @yearold INT, @idFlight CHAR(10)
+	SELECT @timetogoold = Deleted.timeToGo, @timetocomeold = Deleted.timeToCome, @idFlight = Deleted.idFlights FROM Deleted
+	SET @monthold = (SELECT MONTH(@timetogoold))
+	SET @yearold = (SELECT YEAR(@timetogoold))
+	BEGIN TRAN
+	DELETE dbo.Sales WHERE monthSales = @monthold AND yearSales = @yearold AND @idFlight = @idFlight
+	DELETE dbo.Flights WHERE idFlights = @idFlight
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	COMMIT TRAN
 END
 GO
 
@@ -581,7 +674,6 @@ AS
 	END
 	COMMIT TRAN
 GO
-
 -- Transaction sửa thông tin nhân viên
 CREATE PROC USP_UpdateStaff
 @id CHAR(10), @name NVARCHAR(50), @address NVARCHAR(50), @phone VARCHAR(20), 
@@ -610,6 +702,3 @@ AS
 	END
 	COMMIT TRAN
 GO
-
-SELECT * FROM dbo.Prices
-INSERT dbo.Prices(idFlightRoutes,idTicketClass,unitPrice) VALUES ()

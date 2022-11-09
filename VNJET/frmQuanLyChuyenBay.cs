@@ -1,4 +1,5 @@
 ﻿using BUS;
+using DTO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,13 +20,13 @@ namespace VNJET
         TicketClassBUS ticketclassbus = new TicketClassBUS();
         AirportBUS airportbus = new AirportBUS();
         TicketStatusBUS ticketstatusbus = new TicketStatusBUS();
-        bool flagHangVeCellClick = false;
+        bool flagHangVeCellClick;
         public frmQuanLyChuyenBay()
         {
             InitializeComponent();
             LoadAll();
         }
-
+        
         private void LoadAll()
         {
             LoadFormFlight();
@@ -39,6 +40,11 @@ namespace VNJET
 
 
         #region Flight
+        private void RecreateChuyenBay()
+        {
+            LoadDTGVFlight();
+            gbxThemHangVeChoChuyenBay.Enabled = false;
+        }
         private void gbxThemHangVeChoChuyenBay_CursorChanged(object sender, EventArgs e)
         {
             AcceptButton = btnThemHV;
@@ -139,9 +145,109 @@ namespace VNJET
 
             LoadDTGVTicketClassForFlight();
         }
+
+        private void btnTimKiem_Click(object sender, EventArgs e)
+        {
+            dtgvChuyenBay.DataSource = flightbus.SearchById(txtTimKiem.Text);
+            txtTimKiem.Text = "";
+        }
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            if (cboMaTuyenBay.Text.Trim() != "" && cboMaMayBay.Text.Trim() != "")
+            {
+                try
+                {
+                    FlightDTO dto = new FlightDTO(txtMaChuyenBay.Text, cboMaTuyenBay.Text, cboMaMayBay.Text, dtpkThoiGianKhoiHanh.Value, dtpkThoiGianHaCanh.Value);
+                    if (flightbus.InsertFlight(dto))
+                        MessageBox.Show("Thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Thêm không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                }
+                catch
+                {
+                    MessageBox.Show("Thêm không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    RecreateChuyenBay();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (txtMaChuyenBay.Text.Trim() != "")
+            {
+                if (cboMaTuyenBay.Text.Trim() != "" && cboMaMayBay.Text.Trim() != "")
+                {
+                    try
+                    {
+                        FlightDTO dto = new FlightDTO(txtMaChuyenBay.Text, cboMaTuyenBay.Text, cboMaMayBay.Text, dtpkThoiGianKhoiHanh.Value, dtpkThoiGianHaCanh.Value);
+                        if (flightbus.UpdateFlight(dto))
+                            MessageBox.Show("Sửa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        else
+                            MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        RecreateChuyenBay();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnXoa_Click(object sender, EventArgs e)
+        {
+            if (txtMaChuyenBay.Text.Trim() != "")
+            {
+                try
+                {
+                    if (flightbus.DeleteFlight(txtMaChuyenBay.Text))
+                        MessageBox.Show("Xóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Xóa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                catch
+                {
+                    MessageBox.Show("Xóa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    RecreateChuyenBay();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
         #endregion
 
         #region TicketClass
+        private void RecreateHangVe()
+        {
+            LoadDTGVTicketClassForFlight();
+            txtTongSoGhe.Text = "";
+            flagHangVeCellClick = false;
+        }
         private void LoadFormTicketClass()
         {
             DataTable dtHangVe = ticketclassbus.GetForDisplay();
@@ -170,6 +276,112 @@ namespace VNJET
 
             flagHangVeCellClick = true;
         }
+
+        private void btnThemHV_Click(object sender, EventArgs e)
+        {
+            object check = ticketstatusbus.CheckSeats(txtMaChuyenBay.Text);
+            if (cboMaHangVe.Text != "" && txtTongSoGhe.Text != "")
+            {
+                if (Convert.ToInt32(check) >= Convert.ToInt32(txtTongSoGhe.Text))
+                {
+                    try
+                    {
+                        TicketStatusDTO dto = new TicketStatusDTO(txtMaChuyenBay.Text, cboMaHangVe.SelectedValue.ToString(), Convert.ToInt32(txtTongSoGhe.Text), Convert.ToInt32(txtTongSoGhe.Text));
+                        if (ticketstatusbus.InsertTicketStatus(dto))
+                            MessageBox.Show("Thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        else
+                            MessageBox.Show("Thêm không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Thêm không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        RecreateHangVe();
+                    }
+                }    
+                else
+                    MessageBox.Show(String.Format("Chỉ còn {0} ghế ngồi!", check), "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnSuaHV_Click(object sender, EventArgs e)
+        {
+            if (flagHangVeCellClick)
+            {
+                object check = ticketstatusbus.CheckSeats(txtMaChuyenBay.Text);
+                int checkcv = Convert.ToInt32(check);
+                if (cboMaHangVe.Text != "" && txtTongSoGhe.Text != "")
+                {
+                    if (checkcv >= Convert.ToInt32(txtTongSoGhe.Text))
+                    {
+                        try
+                        {
+                            TicketStatusDTO dto = new TicketStatusDTO(txtMaChuyenBay.Text, cboMaHangVe.SelectedValue.ToString(), Convert.ToInt32(txtTongSoGhe.Text), Convert.ToInt32(txtTongSoGhe.Text));
+                            if (ticketstatusbus.UpdateTicketStatus(dto))
+                                MessageBox.Show("Sửa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            else
+                                MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        catch
+                        {
+                            MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        finally
+                        {
+                            RecreateHangVe();
+                            flagHangVeCellClick = false;
+                        }
+                    }
+                    else
+                        MessageBox.Show(String.Format("Chỉ còn {0} ghế ngồi!", check), "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnXoaHV_Click(object sender, EventArgs e)
+        {
+            if (flagHangVeCellClick)
+            {
+                try
+                {
+                    TicketStatusDTO dto = new TicketStatusDTO(txtMaChuyenBay.Text, cboMaHangVe.SelectedValue.ToString(), Convert.ToInt32(txtTongSoGhe.Text), Convert.ToInt32(txtTongSoGhe.Text));
+                    if (ticketstatusbus.DeleteTicketStatus(dto))
+                        MessageBox.Show("Xóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Xóa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                catch
+                {
+                    MessageBox.Show("Xóa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    RecreateHangVe();
+                    flagHangVeCellClick = false;
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
         #endregion
 
 
