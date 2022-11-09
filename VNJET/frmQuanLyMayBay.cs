@@ -1,4 +1,5 @@
 ﻿using BUS;
+using DTO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,6 +24,16 @@ namespace VNJET
         {
             this.Parent.Dispose();
         }
+
+        private void Recreate()
+        {
+            LoadDTGVPlane();
+            txtMaMayBay.Clear();
+            txtTenMayBay.Clear();
+            txtSoLuongGhe.Clear();
+            txtTenMayBay.Focus();
+        }
+
         private void LoadForm()
         {
             LoadDTGVPlane();
@@ -49,6 +60,98 @@ namespace VNJET
             txtSoLuongGhe.Text = row.Cells[2].Value.ToString();
         }
 
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            if (txtTenMayBay.Text.Trim() != "" && txtSoLuongGhe.Text.Trim() != "")
+            {
+                try
+                {
+                    PlaneDTO dto = new PlaneDTO(txtMaMayBay.Text, txtTenMayBay.Text, Convert.ToInt32(txtSoLuongGhe.Text));
+                    if (planbus.InsertPlane(dto))
+                        MessageBox.Show("Thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Thêm không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch
+                {
+                    MessageBox.Show("Thêm không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    Recreate();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
 
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (txtMaMayBay.Text.Trim() != "")
+            {
+                if (txtTenMayBay.Text.Trim() != "" && txtSoLuongGhe.Text.Trim() != "")
+                {
+                    try
+                    {
+                        PlaneDTO dto = new PlaneDTO(txtMaMayBay.Text, txtTenMayBay.Text, Convert.ToInt32(txtSoLuongGhe.Text));
+                        if (planbus.UpdatePlane(dto))
+                            MessageBox.Show("Sửa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        else
+                            MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        Recreate();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnXoa_Click(object sender, EventArgs e)
+        {
+            if (txtMaMayBay.Text.Trim() != "")
+            {
+                try
+                {
+                    if (planbus.DeletePlane(txtMaMayBay.Text))
+                        MessageBox.Show("Xóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Xóa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                catch
+                {
+                    MessageBox.Show("Xóa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    Recreate();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnTimKiem_Click(object sender, EventArgs e)
+        {
+            dtgvMayBay.DataSource = planbus.SearchByName(txtTimKiem.Text);
+            txtTimKiem.Text = "";
+        }
     }
 }

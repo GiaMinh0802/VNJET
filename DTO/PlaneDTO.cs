@@ -10,13 +10,13 @@ namespace DTO
     {
         private string idPlane;
         private string namePlane;
-        private string seatsPlane;
+        private int seatsPlane;
 
         public PlaneDTO()
         {
         }
 
-        public PlaneDTO(string idPlane, string namePlane, string seatsPlane)
+        public PlaneDTO(string idPlane, string namePlane, int seatsPlane)
         {
             IdPlane = idPlane;
             NamePlane = namePlane;
@@ -25,6 +25,6 @@ namespace DTO
 
         public string IdPlane { get => idPlane; set => idPlane = value; }
         public string NamePlane { get => namePlane; set => namePlane = value; }
-        public string SeatsPlane { get => seatsPlane; set => seatsPlane = value; }
+        public int SeatsPlane { get => seatsPlane; set => seatsPlane = value; }
     }
 }

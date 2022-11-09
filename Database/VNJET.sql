@@ -351,8 +351,6 @@ AS
 	WHERE nameStaffs LIKE '%'+@name+'%'
 	ORDER BY Accounts.idStaffs
 GO
-EXEC dbo.USP_SearchStaffByName @name = N'Võ' -- nvarchar(50)
-
 -- Stored Procedure lấy thông tin chuyến bay theo mã chuyến bay
 CREATE PROC USP_GetFlightByIdFlight
 @idFlight CHAR(10)
@@ -427,6 +425,7 @@ BEGIN
 	DELETE dbo.Staffs WHERE idStaffs = @id
 END
 GO
+-- Trigger kiểm tra trùng lặp tên sân bay
 CREATE TRIGGER UTG_CheckAirport
 ON dbo.Airports AFTER INSERT, UPDATE
 AS
@@ -434,6 +433,18 @@ BEGIN
 	DECLARE @nameAirport NVARCHAR(50), @count INT
 	SELECT @nameAirport = Inserted.nameAirport FROM Inserted
 	SELECT @count = COUNT(*) FROM dbo.Airports WHERE nameAirport = @nameAirport
+	IF (@count > 1)
+		ROLLBACK TRAN	
+END
+GO
+-- Trigger kiểm tra trùng lặp tên máy bay
+CREATE TRIGGER UTG_CheckNamePlane
+ON dbo.Planes AFTER INSERT, UPDATE
+AS
+BEGIN
+	DECLARE @namePlane NVARCHAR(50), @count INT
+	SELECT @namePlane = Inserted.namePlane FROM Inserted
+	SELECT @count = COUNT(*) FROM dbo.Planes WHERE namePlane = @namePlane
 	IF (@count > 1)
 		ROLLBACK TRAN	
 END
@@ -531,3 +542,10 @@ AS
 	END
 	COMMIT TRAN
 GO
+
+DELETE dbo.Planes WHERE idPlane='MB0005'
+
+SELECT * FROM dbo.Planes
+UPDATE dbo.Planes SET namePlane = N'Boeing 721', seatsPlane = 150 WHERE idPlane = 'MB0004'
+
+SELECT * FROM dbo.Planes WHERE namePlane LIKE '%'+namePlane+'%'
