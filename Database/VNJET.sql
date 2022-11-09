@@ -611,8 +611,5 @@ AS
 	COMMIT TRAN
 GO
 
-SELECT dbo.UF_CreateIdTicketClass()
-SELECT * FROM dbo.TicketClasses WHERE nameTicketClass LIKE '%'+N'{0}'+'%'
-DELETE dbo.TicketClasses WHERE idTicketClass = ''
-UPDATE dbo.TicketClasses SET nameTicketClass = N'' WHERE idTicketClass = ''
-INSERT dbo.TicketClasses(idTicketClass, nameTicketClass) VALUES ((SELECT dbo.UF_CreateIdTicketClass()), N'{0}')
+SELECT * FROM dbo.Prices
+INSERT dbo.Prices(idFlightRoutes,idTicketClass,unitPrice) VALUES ()

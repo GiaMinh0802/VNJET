@@ -109,6 +109,7 @@
             this.btnThem.TabIndex = 6;
             this.btnThem.UseCompatibleTextRendering = true;
             this.btnThem.UseVisualStyleBackColor = true;
+            this.btnThem.Click += new System.EventHandler(this.btnThem_Click);
             // 
             // label5
             // 
@@ -148,6 +149,7 @@
             this.btnSua.Size = new System.Drawing.Size(41, 41);
             this.btnSua.TabIndex = 7;
             this.btnSua.UseVisualStyleBackColor = true;
+            this.btnSua.Click += new System.EventHandler(this.btnSua_Click);
             // 
             // btnXoa
             // 
@@ -160,6 +162,7 @@
             this.btnXoa.Size = new System.Drawing.Size(41, 41);
             this.btnXoa.TabIndex = 8;
             this.btnXoa.UseVisualStyleBackColor = true;
+            this.btnXoa.Click += new System.EventHandler(this.btnXoa_Click);
             // 
             // panel1
             // 
@@ -254,6 +257,7 @@
             this.btnTimKiem.Size = new System.Drawing.Size(25, 24);
             this.btnTimKiem.TabIndex = 10;
             this.btnTimKiem.UseVisualStyleBackColor = true;
+            this.btnTimKiem.Click += new System.EventHandler(this.btnTimKiem_Click);
             // 
             // gbxTTMayBay
             // 

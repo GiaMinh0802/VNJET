@@ -1,4 +1,5 @@
 ﻿using BUS;
+using DTO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,7 +28,11 @@ namespace VNJET
         {
             this.Parent.Dispose();
         }
-
+        private void Recreate()
+        {
+            LoadDTGVPrice();
+            txtDonGia.Clear();
+        }
         private void LoadForm()
         {
             DataTable dtTuyenBay = flightroutebus.GetForDisplay();
@@ -119,6 +124,115 @@ namespace VNJET
         {
             LoadForm();
             cboMaTuyenBay_SelectionChangeCommitted(sender, e);
+        }
+
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            if (cboMaTuyenBay.Text.Trim() != "" && cboMaHangVe.Text.Trim() != "" && txtDonGia.Text != "")
+            {
+                if (cboSanBayDi.Text == cboSanBayDen.Text)
+                {
+                    MessageBox.Show("Sân bay đến và sân bay đi phải khác nhau!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                try
+                {
+                    PriceDTO dto = new PriceDTO(cboMaTuyenBay.Text, cboMaHangVe.SelectedValue.ToString(), Convert.ToInt32(txtDonGia.Text));
+                    if (pricebus.InsertPrice(dto))
+                        MessageBox.Show("Thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Thêm không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                catch
+                {
+                    MessageBox.Show("Thêm không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    Recreate();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (flagCellClick)
+            {
+
+                if (cboSanBayDi.Text == cboSanBayDen.Text)
+                {
+                    MessageBox.Show("Sân bay đến và sân bay đi phải khác nhau!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                if (cboSanBayDen.Text.Trim() != "" && cboSanBayDi.Text.Trim() != "")
+                {
+                    try
+                    {
+                        PriceDTO dto = new PriceDTO(cboMaTuyenBay.Text, cboMaHangVe.SelectedValue.ToString(), Convert.ToInt32(txtDonGia.Text));
+                        if (pricebus.UpdatePrice(dto))
+                            MessageBox.Show("Sửa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        else
+                            MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Sửa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        Recreate();
+                        flagCellClick = false;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnXoa_Click(object sender, EventArgs e)
+        {
+            if (flagCellClick)
+            {
+                try
+                {
+                    PriceDTO dto = new PriceDTO(cboMaTuyenBay.Text, cboMaHangVe.SelectedValue.ToString(), Convert.ToInt32(txtDonGia.Text));
+                    if (pricebus.DeletePrice(dto))
+                        MessageBox.Show("Xóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Xóa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                catch
+                {
+                    MessageBox.Show("Xóa không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    Recreate();
+                    flagCellClick = false;
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hàng trong danh sách!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnTimKiem_Click(object sender, EventArgs e)
+        {
+            dtgvDonGia.DataSource = pricebus.SearchById(txtTimKiem.Text);
+            txtTimKiem.Text = "";
         }
     }
 }
