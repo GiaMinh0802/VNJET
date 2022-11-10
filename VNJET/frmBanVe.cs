@@ -1,5 +1,6 @@
 ﻿using BUS;
 using DAO;
+using DTO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,6 +34,16 @@ namespace VNJET
         {
             this.Parent.Dispose();
         }
+
+        private void Recreate()
+        {
+            LoadDTGV();
+            txtCMND.Clear();
+            txtSDT.Clear();
+            txtTenKhachHang.Clear();
+            LoadEmptySeat();
+        }
+
 
         private void LoadForm()
         {
@@ -149,6 +160,75 @@ namespace VNJET
         {
             Form frm = new frmTraCuu(cboMaChuyenBay);
             frm.Show();
+        }
+
+        private void btnMuaVe_Click(object sender, EventArgs e)
+        {
+            if (txtSoGheTrong.Text == "0" || txtSoGheTrong.Text == "")
+            {
+                MessageBox.Show("Không còn vé cho hạng vé này!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (cboMaChuyenBay.Text.Trim() != "" && txtCMND.Text.Trim() != "" && txtTenKhachHang.Text.Trim() != "" && txtSDT.Text.Trim() != "" && cboHangVe.Text.Trim() != "")
+            {
+                string giokhoihang = txtThoiGianKhoiHanh.Text;
+                DateTime giobay = DateTime.Parse(giokhoihang);
+                if (giobay > DateTime.Now)
+                {
+                    try
+                    {
+                        TicketFlightDTO dtoTicket = new TicketFlightDTO(null, null, cboMaChuyenBay.Text, cboHangVe.SelectedValue.ToString(), idStaff, Convert.ToDecimal(txtGiaTien.Text));
+                        CustomerDTO dtoCus = new CustomerDTO(null, txtTenKhachHang.Text, txtCMND.Text, txtSDT.Text);
+                        if (ticketFlightBUS.BookingTicket(dtoTicket, dtoCus))
+                            MessageBox.Show("Mua vé thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        else
+                            MessageBox.Show("Mua vé không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Mua vé không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        Recreate();
+                    }
+                }
+                else
+                    MessageBox.Show("Chuyến bay đã khởi hành!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void btnHuyVe_Click(object sender, EventArgs e)
+        {
+            if (this.idTicket != "")
+            {
+                try
+                {
+                    if (ticketFlightBUS.CancelTicket(this.idTicket))
+                        MessageBox.Show("Hủy vé thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Hủy vé không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                catch
+                {
+                    MessageBox.Show("Hủy vé không thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    Recreate();
+                }
+            }
+        }
+
+        private void btnTimKiem_Click(object sender, EventArgs e)
+        {
+            dtgvVe.DataSource = ticketFlightBUS.SearchByPhone(txtTimKiem.Text);
+            txtTimKiem.Text = "";
         }
     }
 }

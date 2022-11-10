@@ -21,6 +21,7 @@ namespace VNJET
         AirportBUS airportbus = new AirportBUS();
         TicketStatusBUS ticketstatusbus = new TicketStatusBUS();
         bool flagHangVeCellClick;
+        int seatsold = 0;
         public frmQuanLyChuyenBay()
         {
             InitializeComponent();
@@ -274,6 +275,7 @@ namespace VNJET
             cboMaHangVe.Text = row.Cells[1].Value.ToString();
             txtTongSoGhe.Text = row.Cells[2].Value.ToString();
 
+            seatsold = Convert.ToInt32(row.Cells[2].Value);
             flagHangVeCellClick = true;
         }
 
@@ -319,7 +321,7 @@ namespace VNJET
                 int checkcv = Convert.ToInt32(check);
                 if (cboMaHangVe.Text != "" && txtTongSoGhe.Text != "")
                 {
-                    if (checkcv >= Convert.ToInt32(txtTongSoGhe.Text))
+                    if (checkcv+seatsold >= Convert.ToInt32(txtTongSoGhe.Text))
                     {
                         try
                         {
@@ -340,7 +342,7 @@ namespace VNJET
                         }
                     }
                     else
-                        MessageBox.Show(String.Format("Chỉ còn {0} ghế ngồi!", check), "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(String.Format("Chỉ còn {0} ghế ngồi!", checkcv+seatsold), "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
                 {

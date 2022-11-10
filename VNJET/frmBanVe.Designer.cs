@@ -299,6 +299,7 @@
             this.btnHuyVe.Size = new System.Drawing.Size(41, 41);
             this.btnHuyVe.TabIndex = 66;
             this.btnHuyVe.UseVisualStyleBackColor = true;
+            this.btnHuyVe.Click += new System.EventHandler(this.btnHuyVe_Click);
             // 
             // label19
             // 
@@ -334,6 +335,7 @@
             this.btnMuaVe.Size = new System.Drawing.Size(41, 41);
             this.btnMuaVe.TabIndex = 5;
             this.btnMuaVe.UseVisualStyleBackColor = true;
+            this.btnMuaVe.Click += new System.EventHandler(this.btnMuaVe_Click);
             // 
             // label16
             // 
@@ -349,9 +351,9 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(15, 62);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(43, 13);
+            this.label2.Size = new System.Drawing.Size(39, 13);
             this.label2.TabIndex = 63;
-            this.label2.Text = "Mua vé";
+            this.label2.Text = "Đặt vé";
             // 
             // panel1
             // 
@@ -446,6 +448,7 @@
             this.btnTimKiem.Size = new System.Drawing.Size(25, 24);
             this.btnTimKiem.TabIndex = 8;
             this.btnTimKiem.UseVisualStyleBackColor = true;
+            this.btnTimKiem.Click += new System.EventHandler(this.btnTimKiem_Click);
             // 
             // gbxTTVe
             // 

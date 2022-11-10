@@ -394,6 +394,34 @@ BEGIN
 	RETURN @IdFlight
 END
 GO
+-- Function tạo mã vé máy bay
+CREATE FUNCTION UF_CreateIdTicketFlight()
+RETURNS CHAR(10)
+AS
+BEGIN
+	DECLARE @IdTF CHAR(10)
+	DECLARE @count INT = (SELECT COUNT(*) FROM dbo.TicketFlights)
+	IF @count = 0
+		RETURN 'VE0000'
+	SET @count = (SELECT CAST((SELECT SUBSTRING((SELECT TOP(1) idTicket FROM dbo.TicketFlights ORDER BY idTicket DESC), 3, 5)) AS INT) + 1)
+	SET @IdTF = 'VE' + CAST(@count AS CHAR(10))
+	DECLARE @temp INT = @count
+	DECLARE @strSoKhong CHAR(4) = ''
+	DECLARE @dem INT = 0 
+	WHILE @temp > 0
+	BEGIN
+	    SET @temp = @temp / 10
+		SET @dem = @dem + 1
+	END
+	DECLARE @i INT = 0
+	WHILE @i < (4 - @dem)
+	BEGIN
+		SET @IdTF = (SELECT STUFF(@IdTF, 3, 0, '0'))
+		SET @i = @i + 1
+	END
+	RETURN @IdTF
+END
+GO
 -- Function lấy giá vé của chuyến bay
 CREATE FUNCTION UF_GetPriceByIdFlightAndIdTicketClass(@idFlight CHAR(10), @idTicketClass CHAR(10))
 RETURNS DECIMAL(18, 0)
@@ -590,8 +618,8 @@ BEGIN
 	COMMIT TRAN
 END
 GO
--- Trigger thêm danh sách doanh thu khi thêm, sửa chuyến bay
-ALTER TRIGGER UTG_DeleteSaleFromFlight
+-- Trigger xóa danh sách doanh thu khi thêm, sửa chuyến bay
+CREATE TRIGGER UTG_DeleteSaleFromFlight
 ON dbo.Flights INSTEAD OF DELETE
 AS
 BEGIN
@@ -602,6 +630,58 @@ BEGIN
 	BEGIN TRAN
 	DELETE dbo.Sales WHERE monthSales = @monthold AND yearSales = @yearold AND @idFlight = @idFlight
 	DELETE dbo.Flights WHERE idFlights = @idFlight
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	COMMIT TRAN
+END
+GO
+--Triger sửa doanh thu và sửa tình trạng vé khi bán vé
+CREATE TRIGGER UTG_SaleAndTicketStatusBookingTicket
+ON dbo.TicketFlights AFTER INSERT
+AS
+BEGIN
+	DECLARE @idFlight CHAR(10), @idTC CHAR(10), @timetogo DATETIME, @month INT, @year INT, @price DECIMAL(18, 0)
+	SELECT @idFlight = Inserted.idFlights, @idTC = Inserted.idTicketClass
+	FROM Inserted
+	SELECT @timetogo = timeToGo FROM dbo.Flights WHERE idFlights = @idFlight
+	SET @month = (SELECT MONTH(@timetogo))
+	SET @year = (SELECT YEAR(@timetogo))
+	SET @price = (SELECT dbo.UF_GetPriceByIdFlightAndIdTicketClass(@idFlight, @idTC))
+	BEGIN TRAN
+	UPDATE dbo.TicketStatus SET emptySeats = emptySeats - 1 
+	WHERE idFlights = @idFlight AND idTicketClass = @idTC
+	UPDATE dbo.Sales SET sale = sale + @price, countTicket = countTicket + 1
+	WHERE monthSales = @month AND yearSales = @year AND idFlights = @idFlight
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	COMMIT TRAN
+END
+GO
+-- Trigger sửa doanh thu và sửa tình trạng vé khi hủy vé
+CREATE TRIGGER UTG_SaleAndTicketStatusCancelTicket
+ON dbo.TicketFlights INSTEAD OF DELETE
+AS
+BEGIN
+	DECLARE @idFlight CHAR(10), @idTC CHAR(10), @idTicket CHAR(10),
+			@timetogo DATETIME, @month INT, @year INT, @price DECIMAL(18, 0)
+	SELECT @idFlight = Deleted.idFlights, @idTC = Deleted.idTicketClass, @idTicket = Deleted.idTicket
+	FROM Deleted
+	SELECT @timetogo = timeToGo FROM dbo.Flights WHERE idFlights = @idFlight
+	SET @month = (SELECT MONTH(@timetogo))
+	SET @year = (SELECT YEAR(@timetogo))
+	SET @price = (SELECT dbo.UF_GetPriceByIdFlightAndIdTicketClass(@idFlight, @idTC))
+	BEGIN TRAN
+	UPDATE dbo.TicketStatus SET emptySeats = emptySeats + 1 
+	WHERE idFlights = @idFlight AND idTicketClass = @idTC
+	UPDATE dbo.Sales SET sale = sale - @price, countTicket = countTicket - 1
+	WHERE monthSales = @month AND yearSales = @year AND idFlights = @idFlight
+	DELETE dbo.TicketFlights WHERE idTicket = @idTicket
 	IF (@@ERROR <> 0)
 	BEGIN
 	    ROLLBACK
@@ -695,6 +775,31 @@ AS
 	END
 	UPDATE dbo.Accounts SET userAcc = @user,  typeAcc = @type 
 	WHERE idStaffs = @id
+	IF (@@ERROR <> 0)
+	BEGIN
+	    ROLLBACK
+		RETURN
+	END
+	COMMIT TRAN
+GO
+-- Transaction bán vé máy bay
+ALTER PROC USP_BookingTicket
+@nameCus NVARCHAR(50), @identityCus VARCHAR(12), @phoneCus VARCHAR(10),
+@idFlight CHAR(10), @idTicketClass CHAR(10), @idStaff CHAR(10)
+AS
+	DECLARE @count INT, @idCus CHAR(10)
+	SELECT @count = COUNT(*) FROM dbo.Customers WHERE identitycardCus = @identityCus
+	BEGIN TRAN
+	IF (@count > 0)
+		SET @idCus = (SELECT idCus FROM dbo.Customers WHERE identitycardCus = @identityCus)	
+	ELSE
+		BEGIN
+			SET @idCus = (SELECT dbo.UF_CreateIdCustomer())
+			INSERT dbo.Customers( idCus, nameCus, identitycardCus, phoneCus)
+			VALUES(@idCus, @nameCus, @identityCus, @phoneCus)
+		END
+	INSERT dbo.TicketFlights (idTicket, idCus, idFlights, idTicketClass, idStaffs) 
+	VALUES ((SELECT dbo.UF_CreateIdTicketFlight()), @idCus, @idFlight, @idTicketClass, @idStaff)
 	IF (@@ERROR <> 0)
 	BEGIN
 	    ROLLBACK
