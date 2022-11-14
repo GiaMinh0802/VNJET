@@ -723,7 +723,19 @@ AS
 	INNER JOIN dbo.Airports AS AirportToCome
 	ON AirportToCome.idAirport = FlightRoutes.idAirportToCome
 GO
-
+-- View danh sách doanh thu theo cá nhân nhân viên
+CREATE VIEW UV_SaleByStaff
+AS
+	SELECT TicketFlights.idStaffs, nameStaffs, phoneStaffs, COUNT(*) AS countTicket, SUM(GetPrice.totalPrice) AS totalSale
+	FROM dbo.TicketFlights INNER JOIN 
+	(SELECT idTicket, dbo.UF_GetPriceByIdFlightAndIdTicketClass(idFlights, idTicketClass) AS totalPrice, idStaffs
+	FROM dbo.TicketFlights) AS GetPrice
+	ON GetPrice.idTicket = TicketFlights.idTicket
+	INNER JOIN dbo.Staffs 
+	ON Staffs.idStaffs = GetPrice.idStaffs
+	GROUP BY TicketFlights.idStaffs, nameStaffs, phoneStaffs
+GO
+SELECT * FROM dbo.UV_SaleByStaff WHERE idStaffs = 'NV0004'
 ---------------------------------------------------------------------------------------------------
 
 -- TRANSACTION

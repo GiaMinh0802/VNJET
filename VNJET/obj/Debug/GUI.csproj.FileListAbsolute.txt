@@ -31,3 +31,4 @@ E:\University\2022-2023\HK1\DBMS\Project\VNJET\VNJET\obj\Debug\VNJET.frmTraCuu.r
 E:\University\2022-2023\HK1\DBMS\Project\VNJET\VNJET\bin\Debug\DTO.dll
 E:\University\2022-2023\HK1\DBMS\Project\VNJET\VNJET\bin\Debug\DTO.pdb
 E:\University\2022-2023\HK1\DBMS\Project\VNJET\VNJET\bin\Debug\DTO.dll.config
+E:\University\2022-2023\HK1\DBMS\Project\VNJET\VNJET\obj\Debug\VNJET.frmBaoCao.resources
