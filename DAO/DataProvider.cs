@@ -17,7 +17,19 @@ namespace DAO
             private set { DataProvider.instance = value; }
         }
 
+        private string strmanager = "Data Source=DESKTOP-26O1A6C\\GIAMINH;Initial Catalog=VNJET;User ID=Manager;Password=Manager;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+        private string strstaff = "Data Source=DESKTOP-26O1A6C\\GIAMINH;Initial Catalog=VNJET;User ID=Staff;Password=Staff;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
         private string connectionStr = "Data Source=DESKTOP-26O1A6C\\GIAMINH;Initial Catalog=VNJET;Integrated Security=True";
+
+
+        public void Decentralize(int type)
+        {
+            if (type == 1)
+                connectionStr = strmanager;
+            else
+                connectionStr = strstaff;
+        }
 
         private DataProvider()
         { }

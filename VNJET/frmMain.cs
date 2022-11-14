@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DAO;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -24,6 +25,7 @@ namespace VNJET
             lbMaNhanVien.Text = "Mã nhân viên: " + rowStaff[2].ToString();
             lbUsername.Text = "Username: " + rowStaff[0].ToString();
             int type = Convert.ToInt32(rowStaff[3].ToString());
+            DataProvider.Instance.Decentralize(type);
             if (type == 1)
             {
                 mstrMain.Enabled = true;

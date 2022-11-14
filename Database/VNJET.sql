@@ -25,7 +25,7 @@ CREATE TABLE Accounts(
 	userAcc CHAR(100) CONSTRAINT PK_userAcc PRIMARY KEY,
 	passAcc CHAR(100) NOT NULL,
 	idStaffs CHAR(10) NOT NULL,
-	typeAcc INT NOT NULL -- 1 là admin, 0 là nhân viên
+	typeAcc INT NOT NULL -- 1 là quản ly, 0 là nhân viên
 )
 GO
 
@@ -735,7 +735,7 @@ AS
 	ON Staffs.idStaffs = GetPrice.idStaffs
 	GROUP BY TicketFlights.idStaffs, nameStaffs, phoneStaffs
 GO
-SELECT * FROM dbo.UV_SaleByStaff WHERE idStaffs = 'NV0004'
+
 ---------------------------------------------------------------------------------------------------
 
 -- TRANSACTION
@@ -795,7 +795,7 @@ AS
 	COMMIT TRAN
 GO
 -- Transaction bán vé máy bay
-ALTER PROC USP_BookingTicket
+CREATE PROC USP_BookingTicket
 @nameCus NVARCHAR(50), @identityCus VARCHAR(12), @phoneCus VARCHAR(10),
 @idFlight CHAR(10), @idTicketClass CHAR(10), @idStaff CHAR(10)
 AS
@@ -818,4 +818,92 @@ AS
 		RETURN
 	END
 	COMMIT TRAN
+GO
+
+
+-- Security and Authorization
+-- Tạo user và phân quyền cho quản lý
+CREATE LOGIN Manager WITH PASSWORD = 'Manager'
+CREATE USER manager FOR LOGIN Manager
+GO
+
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Customers TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Staffs TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Accounts TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Planes TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Airports TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.FlightRoutes TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.TicketClasses TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Prices TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Flights TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.TicketFlights TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.TicketStatus TO manager WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Sales TO manager WITH GRANT OPTION
+GO
+
+GRANT EXECUTE ON dbo.UF_CreateIdCustomer TO manager
+GRANT EXECUTE ON dbo.UF_CreateIdStaff TO manager
+GRANT EXECUTE ON dbo.UF_CreateIdPlane TO manager
+GRANT EXECUTE ON dbo.UF_CreateIdAirport TO manager
+GRANT EXECUTE ON dbo.UF_CreateIdFlightRoute TO manager
+GRANT EXECUTE ON dbo.UF_CreateIdTicketClass TO manager
+GRANT EXECUTE ON dbo.UF_CreateIdFlight TO manager
+GRANT EXECUTE ON dbo.UF_CreateIdTicketFlight TO manager
+GRANT EXECUTE ON dbo.UF_GetPriceByIdFlightAndIdTicketClass TO manager
+GRANT EXECUTE ON dbo.UF_GetEmptySeatsByIdFlightAndIdTicketClass TO manager
+GRANT EXECUTE ON dbo.UF_GetSeatsOfPlaneByIdFlight TO manager
+GO
+
+GRANT EXECUTE ON dbo.USP_InsertStaff TO manager
+GRANT EXECUTE ON dbo.USP_UpdateStaff TO manager
+GRANT EXECUTE ON dbo.USP_SearchStaffByName TO manager
+GRANT EXECUTE ON dbo.USP_GetTicketClassForFlight TO manager
+GRANT EXECUTE ON dbo.USP_GetFlightByIdFlight TO manager
+GRANT EXECUTE ON dbo.USP_GetFlightByAirportAndTime TO manager
+GRANT EXECUTE ON dbo.USP_SearchTicketFlightByPhone TO manager
+GRANT EXECUTE ON dbo.USP_BookingTicket TO manager
+GRANT EXECUTE ON dbo.USP_GetTicketStatusByIdFlight TO manager
+GO
+
+GRANT SELECT ON dbo.UV_StaffForDisplay TO manager
+GRANT SELECT ON dbo.UV_FlightRouteForDisplay TO manager
+GRANT SELECT ON dbo.UV_TicketFlightForDisplay TO manager
+GRANT SELECT ON dbo.UV_SaleByStaff TO manager
+GO
+
+-- Tạo user và phân quyền cho nhân viên
+CREATE LOGIN Staff WITH PASSWORD = 'Staff'
+CREATE USER staff FOR LOGIN Staff
+GO
+
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Customers TO staff WITH GRANT OPTION
+GRANT SELECT ON dbo.Accounts TO staff WITH GRANT OPTION
+GRANT SELECT ON dbo.Planes TO staff WITH GRANT OPTION
+GRANT SELECT ON dbo.Airports TO staff WITH GRANT OPTION
+GRANT SELECT ON dbo.FlightRoutes TO staff WITH GRANT OPTION
+GRANT SELECT ON dbo.TicketClasses TO staff WITH GRANT OPTION
+GRANT SELECT ON dbo.Prices TO staff WITH GRANT OPTION
+GRANT SELECT ON dbo.Flights TO staff WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.TicketFlights TO staff WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.TicketStatus TO staff WITH GRANT OPTION
+GRANT SELECT, INSERT, DELETE, UPDATE ON dbo.Sales TO staff WITH GRANT OPTION
+GO
+
+GRANT EXECUTE ON dbo.UF_CreateIdCustomer TO staff
+GRANT EXECUTE ON dbo.UF_CreateIdTicketFlight TO staff
+GRANT EXECUTE ON dbo.UF_GetPriceByIdFlightAndIdTicketClass TO staff
+GRANT EXECUTE ON dbo.UF_GetEmptySeatsByIdFlightAndIdTicketClass TO staff
+GRANT EXECUTE ON dbo.UF_GetSeatsOfPlaneByIdFlight TO staff
+GO
+
+GRANT EXECUTE ON dbo.USP_GetTicketClassForFlight TO staff
+GRANT EXECUTE ON dbo.USP_GetFlightByIdFlight TO staff
+GRANT EXECUTE ON dbo.USP_GetFlightByAirportAndTime TO staff
+GRANT EXECUTE ON dbo.USP_SearchTicketFlightByPhone TO staff
+GRANT EXECUTE ON dbo.USP_BookingTicket TO staff
+GRANT EXECUTE ON dbo.USP_GetTicketStatusByIdFlight TO staff
+GO
+
+GRANT SELECT ON dbo.UV_FlightRouteForDisplay TO staff
+GRANT SELECT ON dbo.UV_TicketFlightForDisplay TO staff
 GO
